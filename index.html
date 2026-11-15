@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f33">
+<title>Douala Flow AI</title>
+<meta name="description" content="Analyse des flux de transport urbain à Douala : carte du trafic, itinéraires, signalements et prévisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></symbol>
+ <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 11h7v9h-7zM4 14h7v6H4z"/></symbol>
+ <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3 8-8 9-5-1-8-4-8-9V6l8-3z"/></symbol>
+ <symbol id="i-route" viewBox="0 0 24 24"><path d="M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/></symbol>
+ <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 18a9 9 0 1 1 16 0M12 14l4-5"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3zM12 10v5M12 18v.5"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol>
+ <symbol id="i-locate" viewBox="0 0 24 24"><path d="M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM12 2v3M12 19v3M2 12h3M19 12h3M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol>
+ <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></symbol>
+ <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></symbol>
+ <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></symbol>
+ <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3-6 8-6s8 2 8 6"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2"/></symbol>
+ <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16v-4l2-5h10l2 5v4M5 16h14M6 16v2M18 16v2M6 11h12"/></symbol>
+ <symbol id="i-cone" viewBox="0 0 24 24"><path d="M10 4h4l4 14H6zM4 20h16M8 12h8"/></symbol>
+ <symbol id="i-crash" viewBox="0 0 24 24"><path d="M12 2l2 6 6-2-4 5 5 3-6 1 1 6-4-4-4 4 1-6-6-1 5-3-4-5 6 2z"/></symbol>
+ <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12c3-4 5 4 9 0s6 4 9 0M3 18c3-4 5 4 9 0s6 4 9 0"/></symbol>
+ <symbol id="i-road" viewBox="0 0 24 24"><path d="M8 3L4 21M16 3l4 18M12 5v2M12 11v2M12 17v2"/></symbol>
+ <symbol id="i-db" viewBox="0 0 24 24"><path d="M4 6c0-2 4-3 8-3s8 1 8 3-4 3-8 3-8-1-8-3zM4 6v12c0 2 4 3 8 3s8-1 8-3V6M4 12c0 2 4 3 8 3s8-1 8-3"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-4 3-6 7-6s7 2 7 6M16 3a4 4 0 0 1 0 8M22 21c0-3-2-5-5-6"/></symbol>
+ <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+ <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></symbol>
+ <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></symbol>
+</defs></svg>
+
+<header class="top">
+  <a class="brand" href="#carte" aria-label="Douala Flow AI">
+    <svg width="32" height="32" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="8" fill="#0070c0"/><path d="M7 24c6 0 4-13 10-13s4 13 10 13" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="17" cy="11" r="2.6" fill="#fff"/></svg>
+    <b>Douala Flow AI</b>
+  </a>
+  <nav class="tabs" id="nav"></nav>
+  <div class="user" id="userBox"></div>
+</header>
+
+<main id="app">
+  <!-- CARTE -->
+  <section class="view" id="v-carte">
+    <div id="map"></div>
+    <div id="gmap" hidden></div>
+    <aside class="panel" id="panel">
+      <div class="seg" role="tablist">
+        <button type="button" data-pt="route" class="on"><svg class="ic"><use href="#i-route"/></svg>Itinéraire</button>
+        <button type="button" data-pt="trafic"><svg class="ic"><use href="#i-gauge"/></svg>Trafic</button>
+        <button type="button" data-pt="signal"><svg class="ic"><use href="#i-alert"/></svg>Signaler</button>
+      </div>
+      <div class="pbody" id="pt-route">
+        <div class="od">
+          <div class="odline"><span class="dot a"></span><div class="ac"><input id="from" placeholder="Départ" autocomplete="off"><div class="sug" id="sug-from" hidden></div></div><button class="icb" type="button" id="useMe" title="Ma position"><svg class="ic"><use href="#i-locate"/></svg></button></div>
+          <div class="odline"><span class="dot b"></span><div class="ac"><input id="to" placeholder="Arrivée" autocomplete="off"><div class="sug" id="sug-to" hidden></div></div><button class="icb" type="button" id="swap" title="Inverser"><svg class="ic"><use href="#i-swap"/></svg></button></div>
+        </div>
+        <div class="when"><svg class="ic"><use href="#i-clock"/></svg><select id="rDay"></select><select id="rHour"></select><button class="btn" type="button" id="go">Calculer</button></div>
+        <div id="routes"></div>
+      </div>
+      <div class="pbody" id="pt-trafic" hidden>
+        <div class="when"><svg class="ic"><use href="#i-clock"/></svg><select id="tDay"></select><select id="tHour"></select><button class="btn ghost sm" type="button" id="tNow">Maintenant</button></div>
+        <ul class="axlist" id="axlist"></ul>
+        <div class="legend"><span><i class="l1"></i>Fluide</span><span><i class="l2"></i>Modéré</span><span><i class="l3"></i>Dense</span><span><i class="l4"></i>Très dense</span></div>
+      </div>
+      <div class="pbody" id="pt-signal" hidden>
+        <div id="sigGuest" class="empty"><svg class="ic lg"><use href="#i-user"/></svg><p>Connectez-vous pour signaler une perturbation.</p><button class="btn" type="button" data-auth="login">Se connecter</button></div>
+        <form id="sigForm" hidden>
+          <div class="chips" id="sigTypes"></div>
+          <div class="pickhint" id="pickHint"><svg class="ic"><use href="#i-pin"/></svg><span>Touchez la carte pour placer le point</span><button class="icb" type="button" id="sigMe" title="Ma position"><svg class="ic"><use href="#i-locate"/></svg></button></div>
+          <textarea id="sigDesc" maxlength="240" placeholder="Précision (facultatif)"></textarea>
+          <button class="btn full" type="submit">Envoyer</button>
+          <h4>Mes signalements</h4>
+          <ul class="mini" id="mySig"></ul>
+        </form>
+      </div>
+    </aside>
+    <div class="mapctl">
+      <div class="layers" id="layers">
+        <button type="button" data-l="plan" class="on">Plan</button>
+        <button type="button" data-l="sat">Satellite</button>
+        <button type="button" data-l="google">Google trafic</button>
+      </div>
+      <button class="fab" type="button" id="locate" title="Me localiser"><svg class="ic"><use href="#i-locate"/></svg></button>
+    </div>
+    <button class="recbtn" type="button" id="recBtn"><svg class="ic"><use href="#i-rec"/></svg>Enregistrer un trajet</button>
+    <div class="recbar" id="recBar" hidden>
+      <span class="pulse"></span>
+      <div><b id="recTime">00:00</b><small id="recDist">0,0 km</small></div>
+      <div><b id="recSpeed">0</b><small>km/h</small></div>
+      <select id="recMode" aria-label="Mode de transport"><option value="voiture">Voiture</option><option value="taxi">Taxi</option><option value="moto-taxi">Moto-taxi</option><option value="bus">Bus</option><option value="autre">Autre</option></select>
+      <button class="btn danger" type="button" id="recStop"><svg class="ic"><use href="#i-stop"/></svg>Terminer</button>
+    </div>
+  </section>
+
+  <!-- TABLEAU DE BORD -->
+  <section class="view page" id="v-tableau" hidden>
+    <div class="ph"><h1>Tableau de bord</h1><div class="when"><select id="dDay"></select><span class="src" id="dSrc"></span></div></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="card"><h2>Indice de congestion par heure</h2><div id="dHour"></div></div>
+      <div class="card"><h2>Comparaison des zones</h2><div id="dZone"></div></div>
+    </div>
+    <div class="card"><div class="ch"><h2>État des axes</h2><button class="btn ghost sm" type="button" id="csv"><svg class="ic"><use href="#i-dl"/></svg>CSV</button></div><div class="scroll"><table><thead><tr><th>Axe</th><th>Zone</th><th>Niveau</th><th>Indice</th><th>Temps estimé</th><th>Source</th></tr></thead><tbody id="dAxes"></tbody></table></div></div>
+  </section>
+
+  <!-- PRÉVISIONS -->
+  <section class="view page" id="v-previsions" hidden>
+    <div class="ph"><h1>Prévisions</h1><div class="when"><select id="pAxis"></select><select id="pDay"></select></div></div>
+    <div class="card"><p class="verdict" id="pText"></p><div id="pChart"></div>
+      <div class="legend"><span><i class="l1"></i>Fluide</span><span><i class="l2"></i>Modéré</span><span><i class="l3"></i>Dense</span><span><i class="l4"></i>Très dense</span><span class="src" id="pSrc"></span></div></div>
+    <div class="card"><h2>Heure de pointe par axe</h2><div class="scroll"><table><thead><tr><th>Axe</th><th>Pic</th><th>Niveau</th><th>Temps au pic</th></tr></thead><tbody id="pTable"></tbody></table></div></div>
+  </section>
+
+  <!-- ADMINISTRATION -->
+  <section class="view page" id="v-admin" hidden>
+    <div class="ph"><h1>Administration</h1></div>
+    <div class="card"><div class="ch"><h2>Signalements</h2><span class="src" id="aPend"></span></div><div class="scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Axe</th><th>Précision</th><th>Statut</th><th></th></tr></thead><tbody id="aReports"></tbody></table></div></div>
+    <div class="grid2">
+      <div class="card"><h2>Utilisateurs</h2><div class="scroll"><table><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th></tr></thead><tbody id="aUsers"></tbody></table></div></div>
+      <div class="card"><h2>Observation de terrain</h2>
+        <form class="form" id="obsForm">
+          <label>Axe<select id="oAxis"></select></label>
+          <label>Temps de parcours mesuré (min)<input type="number" id="oDur" min="1" max="240" value="15" required></label>
+          <button class="btn" type="submit">Enregistrer</button>
+        </form>
+        <h2 style="margin-top:22px">Paramètres</h2>
+        <form class="form" id="setForm">
+          <label>Clé d'API Google Maps<input type="text" id="gKey" placeholder="AIza…" autocomplete="off"></label>
+          <div class="row"><button class="btn" type="submit">Enregistrer</button><button class="btn ghost" type="button" id="regeo">Recalculer les tracés des axes</button></div>
+        </form>
+      </div>
+    </div>
+    <div class="card"><h2>Journal</h2><div class="scroll"><table><thead><tr><th>Date</th><th>Opération</th></tr></thead><tbody id="aLogs"></tbody></table></div></div>
+  </section>
+</main>
+
+<div class="modal" id="auth" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button class="icb close" type="button" data-close><svg class="ic"><use href="#i-x"/></svg></button>
+    <h2 id="authTitle">Connexion</h2>
+    <form class="form" id="authForm">
+      <label id="nomRow" hidden>Nom<input type="text" id="aNom" autocomplete="name"></label>
+      <label>E-mail<input type="email" id="aEmail" autocomplete="username" required></label>
+      <label>Mot de passe<input type="password" id="aPass" autocomplete="current-password" minlength="8" required></label>
+      <p class="err" id="aErr" hidden></p>
+      <button class="btn full" type="submit" id="aSubmit">Se connecter</button>
+    </form>
+    <p class="switch"><a href="#" id="aSwitch">Créer un compte</a></p>
+    <div class="demo"><span>Démo</span><button type="button" data-demo="usager">Usager</button><button type="button" data-demo="analyste">Analyste</button><button type="button" data-demo="admin">Admin</button></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
